@@ -24,17 +24,22 @@ export interface LayerPanelProps {
   allowMultiSelect?: boolean
   showContextMenu?: boolean
   maxNestingLevel?: number
+  reverseOrder?: boolean
+  reverseOrderGroups?: boolean
 }
 
 export interface LayerItemProps {
   item: LayerItem
   level?: number
+  index?: number
+  originalIndex?: number
   allowNesting?: boolean
   allowMultiSelect?: boolean
   showContextMenu?: boolean
   maxNestingLevel?: number
   selected?: boolean
   dragging?: boolean
+  reverseOrderGroups?: boolean
 }
 
 export interface ContextMenuOption {

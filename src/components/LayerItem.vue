@@ -31,11 +31,9 @@
         <span class="expand-icon" :class="{ 'collapsed': item.collapsed }">▼</span>
       </button>
       
-      <div v-else class="layer-expand-spacer"></div>
-      
-      <!-- Custom item content slot -->
+      <div v-else class="layer-expand-spacer"></div>      <!-- Custom item content slot -->
       <div class="layer-content-wrapper">
-        <slot name="item-content" :item="item" :level="level">
+        <slot name="item-content" :item="item" :level="level" :index="index" :original-index="originalIndex">
           <div class="layer-item-default">
             <span class="layer-title">{{ item.title }}</span>
           </div>
@@ -83,33 +81,31 @@
       class="drop-zone drop-zone-inside"
       :class="{ 'active': dropZones.inside }"
     ></div>
-    
-    <!-- Children -->
+      <!-- Children -->
     <div v-if="hasChildren && !item.collapsed" class="layer-children">
-      <LayerItem
-        v-for="child in item.children"
+      <LayerItem        v-for="(child, childIndex) in orderedChildren"
         :key="child.id"
         :item="child"
         :level="level + 1"
+        :index="childIndex"
+        :original-index="reverseOrderGroups ? (item.children?.length || 0) - 1 - childIndex : childIndex"
         :allow-nesting="allowNesting"
         :allow-multi-select="allowMultiSelect"
-        :show-context-menu="showContextMenu"
-        :max-nesting-level="maxNestingLevel"
+        :show-context-menu="showContextMenu"        :max-nesting-level="maxNestingLevel"
+        :reverse-order-groups="reverseOrderGroups"
         :selected="child.selected"
         :dragging="dragging && draggedItems.some((d: LayerItemType) => d.id === child.id)"
         @item-select="$emit('item-select', $event)"
         @item-toggle-visibility="$emit('item-toggle-visibility', $event)"
         @item-toggle-lock="$emit('item-toggle-lock', $event)"        @item-drag-start="$emit('item-drag-start', $event, $event)"
         @item-drag-end="$emit('item-drag-end')"
-        @item-drag-over="(...args) => $emit('item-drag-over', ...args)"
-        @context-menu="$emit('context-menu', $event, child)"
-      >
-        <template #item-content="{ item: slotItem, level: slotLevel }">
-          <slot name="item-content" :item="slotItem" :level="slotLevel"></slot>
+        @item-drag-over="(...args) => $emit('item-drag-over', ...args)"        @context-menu="$emit('context-menu', $event, child)"
+      >        <template #item-content="{ item, level }">
+          <slot name="item-content" :item="item" :level="level" :index="childIndex" :original-index="reverseOrderGroups ? (props.item.children?.length || 0) - 1 - childIndex : childIndex"></slot>
         </template>
         
-        <template #item-controls="{ item: slotItem }">
-          <slot name="item-controls" :item="slotItem"></slot>
+        <template #item-controls="{ item }">
+          <slot name="item-controls" :item="item"></slot>
         </template>
       </LayerItem>
     </div>
@@ -122,12 +118,15 @@ import type { LayerItemProps, LayerItem as LayerItemType } from '../types'
 
 const props = withDefaults(defineProps<LayerItemProps>(), {
   level: 0,
+  index: 0,
+  originalIndex: 0,
   allowNesting: true,
   allowMultiSelect: true,
   showContextMenu: true,
   maxNestingLevel: 10,
   selected: false,
-  dragging: false
+  dragging: false,
+  reverseOrderGroups: false
 })
 
 const emit = defineEmits<{
@@ -169,6 +168,11 @@ const draggedItems = computed(() => {
 
 const isDraggedItem = computed(() => {
   return draggedItems.value.some((item: LayerItemType) => item.id === props.item.id)
+})
+
+const orderedChildren = computed(() => {
+  if (!props.item.children) return []
+  return props.reverseOrderGroups ? [...props.item.children].reverse() : props.item.children
 })
 
 // Methods

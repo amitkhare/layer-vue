@@ -1,6 +1,7 @@
 # Layer Vue
 
-A Vue 3 library for creating draggable/sortable list items inspired by Photoshop's layers panel. Perfect for building complex UI with nested hierarchies, drag & drop functionality, and rich interactions.
+A Vue 3 library for creating draggable/sortable list items . 
+Perfect for building complex UI with nested hierarchies, drag & drop functionality, and rich interactions.
 
 ## Features
 
@@ -75,6 +76,54 @@ function handleReorder(reorderedItems: LayerItem[]) {
 </script>
 ```
 
+## Reverse Order Display
+
+The `reverseOrder` prop allows you to control the display order of layers, making it easy to mimic different layer panel behaviors:
+
+```vue
+<template>
+  <!-- Traditional order: first item at top -->
+  <LayerPanel
+    v-model:items="layers"
+    :reverse-order="false"
+  />
+  
+  <!-- Design software order: first item at bottom -->
+  <LayerPanel
+    v-model:items="layers"
+    :reverse-order="true"
+  />
+  
+  <!-- Dynamic toggle -->
+  <div>
+    <label>
+      <input type="checkbox" v-model="reverseOrder" />
+      Show layers bottom-to-top
+    </label>
+    <LayerPanel
+      v-model:items="layers"
+      :reverse-order="reverseOrder"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const reverseOrder = ref(false)
+
+// Given this layer data:
+const layers = ref([
+  { id: 1, title: 'Background' },   // Index 0
+  { id: 2, title: 'Content' },     // Index 1  
+  { id: 3, title: 'Overlay' }      // Index 2
+])
+
+// reverseOrder: false displays: Background, Content, Overlay
+// reverseOrder: true displays:  Overlay, Content, Background
+</script>
+```
+
 ## Custom Item Template
 
 ```vue
@@ -115,6 +164,7 @@ function handleReorder(reorderedItems: LayerItem[]) {
 | `allowMultiSelect` | `boolean` | `true` | Enable multi-selection |
 | `showContextMenu` | `boolean` | `true` | Show right-click context menu |
 | `maxNestingLevel` | `number` | `10` | Maximum nesting depth |
+| `reverseOrder` | `boolean` | `false` | Reverse the display order of items |
 
 ### LayerItem Interface
 

@@ -1,13 +1,14 @@
 {
   "name": "layer-vue",
   "version": "1.0.0",
-  "description": "A Vue 3 library for draggable/sortable list items inspired by Photoshop layers panel",
+  "description": "A Vue 3 library for draggable/sortable list items.",
   "main": "dist/layer-vue.umd.js",
   "module": "dist/layer-vue.es.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
-  ],  "scripts": {
+  ],
+  "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
@@ -19,7 +20,6 @@
     "draggable",
     "sortable",
     "layers",
-    "photoshop",
     "list",
     "components"
   ],
@@ -27,7 +27,8 @@
   "license": "MIT",
   "peerDependencies": {
     "vue": "^3.0.0"
-  },  "devDependencies": {
+  },
+  "devDependencies": {
     "@types/node": "^20.0.0",
     "@vitejs/plugin-vue": "^4.4.0",
     "typescript": "^5.0.0",

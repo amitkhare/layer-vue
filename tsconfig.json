@@ -26,6 +26,6 @@
     "declarationDir": "dist",
     "emitDeclarationOnly": false
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

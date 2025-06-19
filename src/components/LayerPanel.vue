@@ -3,16 +3,18 @@
       class="layer-list"
       @dragover.prevent="handleDragOver"
       @drop.prevent="handleDrop"
-    >
-      <LayerItem
-        v-for="item in localItems"
+    >      <LayerItem
+        v-for="(item, index) in orderedItems"
         :key="item.id"
         :item="item"
         :level="0"
+        :index="index"
+        :original-index="reverseOrder ? localItems.length - 1 - index : index"
         :allow-nesting="allowNesting"
         :allow-multi-select="allowMultiSelect"
         :show-context-menu="showContextMenu"
         :max-nesting-level="maxNestingLevel"
+        :reverse-order-groups="reverseOrderGroups"
         :selected="item.selected"
         :dragging="dragState.draggedItems.some(d => d.id === item.id)"
         @item-select="handleItemSelect"
@@ -22,8 +24,8 @@
         @item-drag-over="handleItemDragOver"
         @context-menu="handleContextMenu"
       >
-        <template #item-content="{ item: slotItem, level: slotLevel }">
-          <slot name="item-content" :item="slotItem" :level="slotLevel">
+        <template #item-content="{ item: slotItem, level: slotLevel, index: slotIndex, originalIndex: slotOriginalIndex }">
+          <slot name="item-content" :item="slotItem" :level="slotLevel" :index="slotIndex" :original-index="slotOriginalIndex">
             <div class="layer-item-default">
               <span class="layer-title">{{ slotItem.title }}</span>
             </div>
@@ -51,8 +53,18 @@
               </button>
             </div>
           </slot>
-        </template>
-      </LayerItem>
+        </template>      </LayerItem>
+    </div>
+    
+    <!-- Bottom drop zone for reverse order -->
+    <div
+      v-if="reverseOrder && dragState.isDragging"
+      class="bottom-drop-zone"
+      :class="{ 'active': bottomDropZone.active }"
+      @dragover.prevent="handleBottomDropZoneOver"
+      @drop.prevent="handleBottomDropZoneDrop"
+    >
+      <div class="drop-zone-indicator">Drop here to place at bottom</div>
     </div>
     
     <!-- Context Menu -->
@@ -106,7 +118,9 @@ const props = withDefaults(defineProps<LayerPanelProps>(), {
   allowNesting: true,
   allowMultiSelect: true,
   showContextMenu: true,
-  maxNestingLevel: 10
+  maxNestingLevel: 10,
+  reverseOrder: false,
+  reverseOrderGroups: false
 })
 
 const emit = defineEmits<LayerPanelEmits>()
@@ -134,8 +148,19 @@ const dropIndicator = ref({
   style: {}
 })
 
+const bottomDropZone = ref({
+  active: false
+})
+
 // Computed
 const selectedItems = computed(() => getAllSelectedItems(localItems.value))
+
+const orderedItems = computed(() => {
+  if (props.reverseOrder) {
+    return [...localItems.value].reverse()
+  }
+  return localItems.value
+})
 
 const contextMenuOptions = computed((): ContextMenuOption[] => {
   const hasSelection = selectedItems.value.length > 0
@@ -228,6 +253,7 @@ function handleDragEnd() {
   dragState.value.dropTarget = null
   dragState.value.dropPosition = null
   dropIndicator.value.visible = false
+  bottomDropZone.value.active = false
 }
 
 function handleItemDragOver(item: LayerItemType, position: 'before' | 'after' | 'inside', rect: DOMRect) {
@@ -290,7 +316,13 @@ function handleDrop(event: DragEvent) {
   
   const draggedItems = dragState.value.draggedItems
   const dropTarget = dragState.value.dropTarget
-  const dropPosition = dragState.value.dropPosition
+  let dropPosition = dragState.value.dropPosition
+  
+  // When reverse order is enabled, we need to invert the drop position
+  // for 'before' and 'after' positions to match the visual expectation
+  if (props.reverseOrder && dropPosition !== 'inside') {
+    dropPosition = dropPosition === 'before' ? 'after' : 'before'
+  }
   
   console.log('LayerPanel: Processing drop - moving', draggedItems.map(i => i.title), 'to', dropTarget.title, dropPosition)
   
@@ -470,6 +502,40 @@ function handleDeselectAll() {
   emit('update:items', localItems.value)
 }
 
+function handleBottomDropZoneOver(event: DragEvent) {
+  if (!dragState.value.isDragging) return
+  
+  event.preventDefault()
+  bottomDropZone.value.active = true
+}
+
+function handleBottomDropZoneDrop(event: DragEvent) {
+  if (!dragState.value.isDragging) return
+  
+  event.preventDefault()
+  bottomDropZone.value.active = false
+  
+  const draggedItems = dragState.value.draggedItems
+  
+  // Remove dragged items from their current positions
+  let newItems = [...localItems.value]
+  for (const draggedItem of draggedItems) {
+    newItems = removeItemFromTree(newItems, draggedItem.id)
+  }
+  
+  // Add items to the beginning of the array (which appears at bottom in reverse order)
+  for (let i = draggedItems.length - 1; i >= 0; i--) {
+    const draggedItem = { ...draggedItems[i], parent: null }
+    newItems.unshift(draggedItem)
+  }
+  
+  localItems.value = newItems
+  emit('item-reorder', localItems.value)
+  emit('update:items', localItems.value)
+  
+  handleDragEnd()
+}
+
 // Close context menu on outside click
 useEventListener('click', () => {
   contextMenu.value.visible = false
@@ -608,5 +674,28 @@ defineExpose({
 
 .drop-indicator.inside {
   background: transparent !important;
+}
+
+.bottom-drop-zone {
+  height: 40px;
+  margin: 8px;
+  border: 2px dashed #555;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  transition: all 0.2s ease;
+}
+
+.bottom-drop-zone.active {
+  border-color: #007acc;
+  background: rgba(0, 122, 204, 0.1);
+  color: #007acc;
+}
+
+.drop-zone-indicator {
+  font-size: 12px;
+  pointer-events: none;
 }
 </style>

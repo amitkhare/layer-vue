@@ -36,7 +36,7 @@
         <div class="demo-header">
           <h1>Layer Vue - Simple Demo</h1>
           <p class="demo-subtitle">
-            A Vue 3 component for creating Photoshop-style layer panels with drag & drop functionality.
+            A Vue 3 component for creating layer panels with drag & drop functionality.
           </p>
         </div>
 
