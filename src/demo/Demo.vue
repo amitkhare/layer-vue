@@ -93,8 +93,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import LayerPanel from './components/LayerPanel.vue'
-import type { LayerItem } from './types'
+import LayerPanel from '../components/LayerPanel.vue'
+import type { LayerItem } from '../types'
 
 // Demo data
 const layers = ref<LayerItem[]>([

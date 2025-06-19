@@ -217,6 +217,26 @@ npm run build-lib
 npm run build
 ```
 
+### Demo Structure
+
+The project includes comprehensive demos showcasing all features:
+
+**Available Demos:**
+- **Full Demo** (`index.html`) - Complete feature demonstration with all capabilities
+- **Simple Demo** (`simple-demo.html`) - Minimal implementation example
+
+**Demo Files:**
+- `src/demo/Demo.vue` - Feature-rich demo component
+- `src/demo/SimpleDemo.vue` - Minimal demo component  
+- `src/demo/demo.ts` - Entry point for full demo
+- `src/demo/simple-demo.ts` - Entry point for simple demo
+
+**Running Demos:**
+- Full demo: `http://localhost:5173/` (default)
+- Simple demo: `http://localhost:5173/simple-demo.html`
+
+All demo files are organized in the `src/demo/` directory for better project structure.
+
 ## License
 
 MIT License
