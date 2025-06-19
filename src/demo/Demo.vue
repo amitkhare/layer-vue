@@ -1,26 +1,14 @@
 <template>
   <div class="demo-container">
     <div class="demo-sidebar">
-      <div class="demo-controls">
-        <h3>Controls</h3>
-        <label>
-          <input type="checkbox" v-model="reverseOrder" />
-          Reverse Order (Top Level)
-        </label>
-        <label>
-          <input type="checkbox" v-model="reverseOrderGroups" />
-          Reverse Order Groups (Children)
-        </label>
-      </div>
-      
       <LayerPanel
         v-model:items="layers"
         :allow-nesting="true"
         :allow-multi-select="true"
         :show-context-menu="true"
         :max-nesting-level="5"
-        :reverse-order="reverseOrder"
-        :reverse-order-groups="reverseOrderGroups"
+        :reverse-order="true"
+        :reverse-order-groups="true"
         class="demo-layer-panel"
         @item-select="handleItemSelect"
         @item-toggle-visibility="handleToggleVisibility"
@@ -45,10 +33,6 @@
 import { ref } from 'vue'
 import LayerPanel from '../components/LayerPanel.vue'
 import type { LayerItem } from '../types'
-
-// Demo controls
-const reverseOrder = ref(true)
-const reverseOrderGroups = ref(false)
 
 // Demo data
 const layers = ref<LayerItem[]>([
@@ -209,25 +193,16 @@ function addEvent(type: string, details: string) {
 </script>
 
 <style scoped>
-.demo-controls {
-  padding: 1rem;
-  background: #f5f5f5;
-  border-bottom: 1px solid #ddd;
-}
-
-.demo-controls h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-}
-
-.demo-controls label {
+.demo-container {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  height: 100vh;
+  width: 100%;
+}
+.demo-sidebar {
+  width: 300px;
+  background: #2d2d2d;
+  border-right: 1px solid #3e3e3e;
+  overflow: hidden;
 }
 
-.demo-controls input[type="checkbox"] {
-  margin: 0;
-}
 </style>
