@@ -1,37 +1,27 @@
 <template>
-  <div
-    class="layer-item"
-    :class="{
+  <div class="layer-item" :class="{
       'selected': selected,
       'dragging': dragging,
       'has-children': hasChildren,
       'collapsed': item.collapsed,
       'locked': item.locked
-    }"
-    :style="{ '--level': level }"
-    :draggable="!item.locked"
-    @click="handleClick"
-    @dragstart="handleDragStart"
-    @dragend="handleDragEnd"
-    @dragover="handleDragOver"
-    @dragenter="handleDragEnter"
-    @dragleave="handleDragLeave"
-    @drop="handleDrop"
-    @contextmenu="handleContextMenu"
-  >
+    }" :style="{ '--level': level }" :draggable="!item.locked" @click="handleClick" @dragstart="handleDragStart"
+    @dragend="handleDragEnd" @dragover="handleDragOver" @dragenter="handleDragEnter" @dragleave="handleDragLeave"
+    @drop="handleDrop" @contextmenu="handleContextMenu">
     <div class="layer-item-content">
+      
       <!-- Indentation and expand/collapse -->
       <div class="layer-indent" :style="{ width: (level * 16) + 'px' }"></div>
-      
-      <button
-        v-if="hasChildren"
-        class="layer-expand-btn"
-        @click.stop="toggleCollapse"
-      >
-        <span class="expand-icon" :class="{ 'collapsed': item.collapsed }">▼</span>
-      </button>
-      
-      <div v-else class="layer-expand-spacer"></div>      <!-- Custom item content slot -->
+
+
+      <slot name="item-expand" :item="item" :toggleCollapse="toggleCollapse" :hasChildren="hasChildren">
+        <button  v-if="hasChildren" class="layer-expand-btn" @click.stop="toggleCollapse">
+          <span class="expand-icon" :class="{ 'collapsed': item.collapsed }">▼</span>
+        </button>
+        <div v-else class="layer-expand-spacer"></div>
+      </slot>
+    
+      <!-- Custom item content slot -->
       <div class="layer-content-wrapper">
         <slot name="item-content" :item="item" :level="level" :index="index" :original-index="originalIndex">
           <div class="layer-item-default">
@@ -39,26 +29,18 @@
           </div>
         </slot>
       </div>
-      
+
       <!-- Custom controls slot -->
       <div class="layer-controls-wrapper">
         <slot name="item-controls" :item="item">
           <div class="layer-controls">
-            <button
-              class="layer-control-btn visibility"
-              :class="{ active: item.visible !== false }"
-              @click.stop="$emit('item-toggle-visibility', item)"
-              title="Toggle visibility"
-            >
+            <button class="layer-control-btn visibility" :class="{ active: item.visible !== false }"
+              @click.stop="$emit('item-toggle-visibility', item)" title="Toggle visibility">
               <span v-if="item.visible !== false">👁</span>
               <span v-else>👁‍🗨</span>
             </button>
-            <button
-              class="layer-control-btn lock"
-              :class="{ active: item.locked === true }"
-              @click.stop="$emit('item-toggle-lock', item)"
-              title="Toggle lock"
-            >
+            <button class="layer-control-btn lock" :class="{ active: item.locked === true }"
+              @click.stop="$emit('item-toggle-lock', item)" title="Toggle lock">
               <span v-if="item.locked">🔒</span>
               <span v-else>🔓</span>
             </button>
@@ -66,44 +48,37 @@
         </slot>
       </div>
     </div>
-    
+
     <!-- Drop zones -->
-    <div
-      class="drop-zone drop-zone-before"
-      :class="{ 'active': dropZones.before }"
-    ></div>
-    <div
-      class="drop-zone drop-zone-after"
-      :class="{ 'active': dropZones.after }"
-    ></div>
-    <div
-      v-if="allowNesting && level < maxNestingLevel"
-      class="drop-zone drop-zone-inside"
-      :class="{ 'active': dropZones.inside }"
-    ></div>
-      <!-- Children -->
+    <div class="drop-zone drop-zone-before" :class="{ 'active': dropZones.before }"></div>
+    <div class="drop-zone drop-zone-after" :class="{ 'active': dropZones.after }"></div>
+    <div v-if="allowNesting && level < maxNestingLevel" class="drop-zone drop-zone-inside"
+      :class="{ 'active': dropZones.inside }"></div>
+    <!-- Children -->
     <div v-if="hasChildren && !item.collapsed" class="layer-children">
-      <LayerItem        v-for="(child, childIndex) in orderedChildren"
-        :key="child.id"
-        :item="child"
-        :level="level + 1"
+      <LayerItem v-for="(child, childIndex) in orderedChildren" :key="child.id" :item="child" :level="level + 1"
         :index="childIndex"
         :original-index="reverseOrderGroups ? (item.children?.length || 0) - 1 - childIndex : childIndex"
-        :allow-nesting="allowNesting"
-        :allow-multi-select="allowMultiSelect"
-        :show-context-menu="showContextMenu"        :max-nesting-level="maxNestingLevel"
-        :reverse-order-groups="reverseOrderGroups"
-        :selected="child.selected"
+        :allow-nesting="allowNesting" :allow-multi-select="allowMultiSelect" :show-context-menu="showContextMenu"
+        :max-nesting-level="maxNestingLevel" :reverse-order-groups="reverseOrderGroups" :selected="child.selected"
         :dragging="dragging && draggedItems.some((d: LayerItemType) => d.id === child.id)"
-        @item-select="$emit('item-select', $event)"
-        @item-toggle-visibility="$emit('item-toggle-visibility', $event)"
-        @item-toggle-lock="$emit('item-toggle-lock', $event)"        @item-drag-start="$emit('item-drag-start', $event, $event)"
-        @item-drag-end="$emit('item-drag-end')"
-        @item-drag-over="(...args) => $emit('item-drag-over', ...args)"        @context-menu="$emit('context-menu', $event, child)"
-      >        <template #item-content="{ item, level }">
-          <slot name="item-content" :item="item" :level="level" :index="childIndex" :original-index="reverseOrderGroups ? (props.item.children?.length || 0) - 1 - childIndex : childIndex"></slot>
-        </template>
+        @item-select="$emit('item-select', $event)" @item-toggle-visibility="$emit('item-toggle-visibility', $event)"
+        @item-toggle-lock="$emit('item-toggle-lock', $event)"
+        @item-drag-start="$emit('item-drag-start', $event, $event)" @item-drag-end="$emit('item-drag-end')"
+        @item-drag-over="(...args) => $emit('item-drag-over', ...args)"
+        @context-menu="$emit('context-menu', $event, child)"> 
         
+        <template #item-expand="{ item, toggleCollapse, hasChildren }">
+          <slot name="item-expand" :item="item" :toggleCollapse="toggleCollapse" :hasChildren="hasChildren" >
+          </slot>
+        </template>
+
+        <template #item-content="{ item, level }">
+          <slot name="item-content" :item="item" :level="level" :index="childIndex"
+            :original-index="reverseOrderGroups ? (props.item.children?.length || 0) - 1 - childIndex : childIndex">
+          </slot>
+        </template>
+
         <template #item-controls="{ item }">
           <slot name="item-controls" :item="item"></slot>
         </template>

@@ -24,6 +24,11 @@
         @item-drag-over="handleItemDragOver"
         @context-menu="handleContextMenu"
       >
+        <template #item-expand="{ item, toggleCollapse, hasChildren }">
+          <slot name="item-expand" :item="item" :toggleCollapse="toggleCollapse" :hasChildren="hasChildren" >
+          </slot>
+        </template>
+        
         <template #item-content="{ item: slotItem, level: slotLevel, index: slotIndex, originalIndex: slotOriginalIndex }">
           <slot name="item-content" :item="slotItem" :level="slotLevel" :index="slotIndex" :original-index="slotOriginalIndex">
             <div class="layer-item-default">

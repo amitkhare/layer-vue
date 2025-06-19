@@ -1,28 +1,31 @@
 <template>
   <div class="demo-container">
     <div class="demo-sidebar">
-      <LayerPanel
-        v-model:items="layers"
-        :allow-nesting="true"
-        :allow-multi-select="true"
-        :show-context-menu="true"
-        :max-nesting-level="5"
-        :reverse-order="true"
-        :reverse-order-groups="true"
-        class="demo-layer-panel"
-        @item-select="handleItemSelect"
-        @item-toggle-visibility="handleToggleVisibility"
-        @item-toggle-lock="handleToggleLock"
-        @item-reorder="handleReorder"
-        @item-group="handleGroup"
-        @item-ungroup="handleUngroup"
-        @item-duplicate="handleDuplicate"
-        @item-delete="handleDelete"
-        @context-menu="handleContextMenu"
-      >         <template #item-content="{ item, level, originalIndex }">
+      <LayerPanel v-model:items="layers" :allow-nesting="true" :allow-multi-select="true" :show-context-menu="true"
+        :max-nesting-level="5" :reverse-order="true" :reverse-order-groups="true" class="demo-layer-panel"
+        @item-select="handleItemSelect" @item-toggle-visibility="handleToggleVisibility"
+        @item-toggle-lock="handleToggleLock" @item-reorder="handleReorder" @item-group="handleGroup"
+        @item-ungroup="handleUngroup" @item-duplicate="handleDuplicate" @item-delete="handleDelete"
+        @context-menu="handleContextMenu">
+        <template #item-expand="{ item, toggleCollapse, hasChildren }">
+          <span style="margin-right: 5px;"  v-if="hasChildren" class="layer-expand-btn" @click.stop="toggleCollapse">
+            <span v-if="item.collapsed">▶</span>
+            <span v-else>▼</span>
+          </span>
+          <div v-else style="margin-right: 16px;"></div>
+        </template>
+        <template #item-content="{ item, level, originalIndex }">
           <div :style="{ paddingLeft: (level * 12) + 'px' }">
             <h4>{{ item.title }} | {{ originalIndex }}</h4>
           </div>
+        </template>
+        <template #item-controls="{ item }">
+          <button @click="handleToggleVisibility(item)">
+            {{ item.visible ? '👁' : '👁‍🗨' }}
+          </button>
+          <button @click="handleToggleLock(item)">
+            {{ item.locked ? '🔒' : '🔓' }}
+          </button>
         </template>
       </LayerPanel>
     </div>
@@ -148,10 +151,12 @@ function handleItemSelect(item: LayerItem, selectedItems: LayerItem[]) {
 }
 
 function handleToggleVisibility(item: LayerItem) {
+  item.visible = !item.visible
   addEvent('VISIBILITY', `Toggled visibility of "${item.title}" to ${item.visible ? 'visible' : 'hidden'}`)
 }
 
 function handleToggleLock(item: LayerItem) {
+  item.locked = !item.locked
   addEvent('LOCK', `Toggled lock of "${item.title}" to ${item.locked ? 'locked' : 'unlocked'}`)
 }
 
@@ -198,11 +203,21 @@ function addEvent(type: string, details: string) {
   height: 100vh;
   width: 100%;
 }
+
 .demo-sidebar {
   width: 300px;
   background: #2d2d2d;
   border-right: 1px solid #3e3e3e;
   overflow: hidden;
+}
+
+.expand-icon {
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+
+.expand-icon.collapsed {
+  transform: rotate(-90deg);
 }
 
 </style>
