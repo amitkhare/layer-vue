@@ -1,18 +1,31 @@
 {
-  "name": "layer-vue",
+  "name": "@amitkhare/layer-vue",
   "version": "1.0.0",
-  "description": "A Vue 3 library for draggable/sortable list items.",
+  "description": "A Vue 3 library for creating draggable/sortable list items with hierarchical structure support.",
   "main": "dist/layer-vue.umd.js",
   "module": "dist/layer-vue.es.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist"
+  "types": "dist/index.d.ts",  "files": [
+    "dist/*.js",
+    "dist/*.css",
+    "dist/*.d.ts",
+    "dist/components/",
+    "README.md",
+    "LICENSE"
   ],
+  "exports": {
+    ".": {
+      "import": "./dist/layer-vue.es.js",
+      "require": "./dist/layer-vue.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "build-lib": "vite build --config vite.config.lib.ts"
+    "build-lib": "vite build --config vite.config.lib.ts",
+    "prepublishOnly": "npm run build-lib"
   },
   "keywords": [
     "vue",
@@ -21,10 +34,24 @@
     "sortable",
     "layers",
     "list",
-    "components"
+    "components",
+    "drag-drop",
+    "hierarchical",
+    "nested",
+    "tree",
+    "layer-panel",
+    "typescript"
   ],
   "author": "Amit Kumar Khare",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amitkhare/layer-vue.git"
+  },
+  "homepage": "https://github.com/amitkhare/layer-vue#readme",
+  "bugs": {
+    "url": "https://github.com/amitkhare/layer-vue/issues"
+  },
   "peerDependencies": {
     "vue": "^3.0.0"
   },

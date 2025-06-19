@@ -11,8 +11,7 @@ export default defineConfig({
       exclude: ['src/demo.ts', 'src/Demo.vue'],
       insertTypesEntry: true,
     })
-  ],
-  build: {
+  ],  build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'LayerVue',
@@ -21,6 +20,7 @@ export default defineConfig({
     rollupOptions: {
       external: ['vue'],
       output: {
+        exports: 'named',
         globals: {
           vue: 'Vue'
         }

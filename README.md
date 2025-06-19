@@ -1,15 +1,19 @@
 # Layer Vue
 
-A Vue 3 library for creating draggable/sortable list items . 
+A Vue 3 library for creating draggable/sortable list items with hierarchical structure support. 
 Perfect for building complex UI with nested hierarchies, drag & drop functionality, and rich interactions.
 
 ## Features
 
 - 🎯 **Drag & Drop Reordering**: Intuitive drag and drop to reorder items
 - 🗂️ **Layer Groups/Nesting**: Create hierarchical structures with unlimited nesting
+- 🔄 **Reverse Order Display**: Display items in reverse order (bottom-to-top)
+- 🔄 **Reverse Order Groups**: Optionally reverse order within groups independently
 - 🖱️ **Context Menus**: Right-click context menus with customizable actions
 - 🔘 **Multi-Select**: Select multiple items with Ctrl/Cmd + click or Shift + click
 - 🎨 **Template Slots**: Fully customizable item appearance using Vue slots
+- 📍 **Item Positioning**: Access to both current and original item indices
+- 🎛️ **Custom Expand/Collapse**: Customizable expand/collapse controls
 - 👁️ **Visibility Toggle**: Show/hide items with visual indicators
 - 🔒 **Lock/Unlock**: Prevent modifications to specific items
 - ⚡ **Vue 3 + TypeScript**: Built with modern Vue 3 Composition API and full TypeScript support
@@ -17,7 +21,7 @@ Perfect for building complex UI with nested hierarchies, drag & drop functionali
 ## Installation
 
 ```bash
-npm install layer-vue
+npm install @amitkhare/layer-vue
 ```
 
 ## Basic Usage
@@ -36,9 +40,9 @@ npm install layer-vue
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { LayerPanel, type LayerItem } from 'layer-vue'
+import { LayerPanel, type LayerItemType } from '@amitkhare/layer-vue'
 
-const layers = ref<LayerItem[]>([
+const layers = ref<LayerItemType[]>([
   {
     id: 'layer1',
     title: 'Background',
@@ -66,11 +70,11 @@ const layers = ref<LayerItem[]>([
   }
 ])
 
-function handleItemSelect(item: LayerItem, selectedItems: LayerItem[]) {
+function handleItemSelect(item: LayerItemType, selectedItems: LayerItemType[]) {
   console.log('Selected:', item.title, 'Total selected:', selectedItems.length)
 }
 
-function handleReorder(reorderedItems: LayerItem[]) {
+function handleReorder(reorderedItems: LayerItemType[]) {
   console.log('Items reordered:', reorderedItems)
 }
 </script>
@@ -78,7 +82,7 @@ function handleReorder(reorderedItems: LayerItem[]) {
 
 ## Reverse Order Display
 
-The `reverseOrder` prop allows you to control the display order of layers, making it easy to mimic different layer panel behaviors:
+The `reverseOrder` prop allows you to control the display order of layers, and `reverseOrderGroups` controls whether children within groups are also reversed:
 
 ```vue
 <template>
@@ -86,23 +90,37 @@ The `reverseOrder` prop allows you to control the display order of layers, makin
   <LayerPanel
     v-model:items="layers"
     :reverse-order="false"
+    :reverse-order-groups="false"
   />
   
   <!-- Design software order: first item at bottom -->
   <LayerPanel
     v-model:items="layers"
     :reverse-order="true"
+    :reverse-order-groups="false"
   />
   
-  <!-- Dynamic toggle -->
+  <!-- Both top-level and groups reversed -->
+  <LayerPanel
+    v-model:items="layers"
+    :reverse-order="true"
+    :reverse-order-groups="true"
+  />
+  
+  <!-- Dynamic controls -->
   <div>
     <label>
       <input type="checkbox" v-model="reverseOrder" />
-      Show layers bottom-to-top
+      Reverse Order (Top Level)
+    </label>
+    <label>
+      <input type="checkbox" v-model="reverseOrderGroups" />
+      Reverse Order Groups (Children)
     </label>
     <LayerPanel
       v-model:items="layers"
       :reverse-order="reverseOrder"
+      :reverse-order-groups="reverseOrderGroups"
     />
   </div>
 </template>
@@ -111,16 +129,18 @@ The `reverseOrder` prop allows you to control the display order of layers, makin
 import { ref } from 'vue'
 
 const reverseOrder = ref(false)
+const reverseOrderGroups = ref(false)
 
 // Given this layer data:
 const layers = ref([
-  { id: 1, title: 'Background' },   // Index 0
-  { id: 2, title: 'Content' },     // Index 1  
-  { id: 3, title: 'Overlay' }      // Index 2
+  { id: 1, title: 'Background' },   // Index 0, Original Index 0
+  { id: 2, title: 'Content' },     // Index 1, Original Index 1  
+  { id: 3, title: 'Overlay' }      // Index 2, Original Index 2
 ])
 
 // reverseOrder: false displays: Background, Content, Overlay
 // reverseOrder: true displays:  Overlay, Content, Background
+// Original indices remain constant regardless of display order
 </script>
 ```
 
@@ -129,13 +149,15 @@ const layers = ref([
 ```vue
 <template>
   <LayerPanel v-model:items="layers">
-    <template #item-content="{ item, level }">
+    <!-- Custom content with index information -->
+    <template #item-content="{ item, level, index, originalIndex }">
       <div class="custom-layer" :style="{ paddingLeft: (level * 20) + 'px' }">
         <div class="layer-icon">
           <i :class="getIconClass(item)"></i>
         </div>
         <span class="layer-name">{{ item.title }}</span>
         <div class="layer-info">
+          <span class="index-info">{{ index }} ({{ originalIndex }})</span>
           <span v-if="item.data?.opacity" class="opacity">
             {{ item.data.opacity }}%
           </span>
@@ -143,6 +165,17 @@ const layers = ref([
       </div>
     </template>
     
+    <!-- Custom expand/collapse controls -->
+    <template #item-expand="{ hasChildren, collapsed, toggleCollapse }">
+      <div v-if="hasChildren">
+        <button @click.stop="toggleCollapse" class="custom-expand">
+          {{ collapsed ? '📁' : '📂' }}
+        </button>
+      </div>
+      <div v-else class="expand-spacer"></div>
+    </template>
+    
+    <!-- Custom controls -->
     <template #item-controls="{ item }">
       <div class="custom-controls">
         <button @click="duplicateItem(item)">📋</button>
@@ -164,7 +197,8 @@ const layers = ref([
 | `allowMultiSelect` | `boolean` | `true` | Enable multi-selection |
 | `showContextMenu` | `boolean` | `true` | Show right-click context menu |
 | `maxNestingLevel` | `number` | `10` | Maximum nesting depth |
-| `reverseOrder` | `boolean` | `false` | Reverse the display order of items |
+| `reverseOrder` | `boolean` | `false` | Reverse the display order of top-level items |
+| `reverseOrderGroups` | `boolean` | `false` | Reverse the display order within groups/children |
 
 ### LayerItem Interface
 
@@ -206,6 +240,19 @@ Customize the main content area of each item.
 **Slot Props:**
 - `item: LayerItem` - The layer item data
 - `level: number` - Nesting level (0-based)
+- `index: number` - Current display index (affected by reverse order)
+- `originalIndex: number` - Original index in the array (unaffected by reverse order)
+
+### `item-expand`
+
+Customize the expand/collapse button for items with children.
+
+**Slot Props:**
+- `item: LayerItem` - The layer item data
+- `level: number` - Nesting level (0-based) 
+- `hasChildren: boolean` - Whether the item has children
+- `collapsed: boolean` - Whether the item is collapsed
+- `toggleCollapse: () => void` - Function to toggle collapse state
 
 ### `item-controls`
 
@@ -267,13 +314,28 @@ npm run build-lib
 npm run build
 ```
 
+## Publishing
+
+To publish to NPM:
+
+```bash
+# 1. Build the library
+npm run build-lib
+
+# 2. Login to NPM (if not already logged in)
+npm login
+
+# 3. Publish to NPM
+npm publish
+```
+
+The `prepublishOnly` script will automatically build the library before publishing.
+
 ### Demo Structure
 
 The project includes comprehensive demos showcasing all features:
 
 **Available Demos:**
-- **Full Demo** (`index.html`) - Complete feature demonstration with all capabilities
-- **Simple Demo** (`simple-demo.html`) - Minimal implementation example
 
 **Demo Files:**
 - `src/demo/Demo.vue` - Feature-rich demo component
@@ -282,8 +344,7 @@ The project includes comprehensive demos showcasing all features:
 - `src/demo/simple-demo.ts` - Entry point for simple demo
 
 **Running Demos:**
-- Full demo: `http://localhost:5173/` (default)
-- Simple demo: `http://localhost:5173/simple-demo.html`
+- Demo: `http://localhost:5173/` (default)
 
 All demo files are organized in the `src/demo/` directory for better project structure.
 

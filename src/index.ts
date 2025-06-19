@@ -11,5 +11,3 @@ export {
   DragState,
   ContextMenuOption
 }
-
-export default LayerPanel

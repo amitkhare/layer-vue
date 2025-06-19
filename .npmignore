@@ -1,0 +1,34 @@
+# Source files
+src/
+public/
+*.html
+vite.config.ts
+vite.config.lib.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
+
+# Development files
+.vscode/
+.git/
+.gitignore
+node_modules/
+
+# Demo and test files
+src/demo/
+dist/demo/
+simple.html
+simple-demo.html
+
+# Build artifacts (keep only dist/)
+.env
+.env.local
+.env.*.local
+
+# Documentation (except README.md)
+*.md
+!README.md
+
+# Other
+.DS_Store
+Thumbs.db
